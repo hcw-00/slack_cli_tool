@@ -8,6 +8,7 @@ import json
 import sys
 from urllib.parse import urlparse
 from pathlib import Path
+from datetime import datetime
 
 load_dotenv()
 
@@ -236,8 +237,13 @@ def main(args=None):
     elif args.command == "history":
         messages = get_channel_messages(args.limit)
         if messages:
-            for msg in messages:
-                print(f"User: {msg.get('user')}, Message: {msg.get('text')}, Timestamp: {msg.get('ts')}")
+            for i, msg in enumerate(messages, start=1):
+
+                timestamp = datetime.fromtimestamp(float(msg.get('ts')))
+                print(f"{i}. Timestamp: {timestamp}, User: {msg.get('user')}, Message: {msg.get('text')}, Channel: {msg.get('channel')}, Type: {msg.get('type')}")
+                if 'files' in msg:  # Check if the message contains files
+                    for file in msg['files']:
+                        print(f"  └ File ID: {file['id']}, Name: {file['name']}, Type: {file['filetype']}, Size: {file['size']} bytes")
         else:
             print("Failed to retrieve messages.")
     elif args.command == "get":
