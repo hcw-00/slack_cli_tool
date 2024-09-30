@@ -6,6 +6,8 @@ import os
 from dotenv import load_dotenv
 import json
 import sys
+from urllib.parse import urlparse
+from pathlib import Path
 
 load_dotenv()
 
@@ -17,6 +19,8 @@ UPLOAD_URL = "https://slack.com/api/files.getUploadURLExternal"
 COMPLETE_UPLOAD_URL = "https://slack.com/api/files.completeUploadExternal"
 POST_MESSAGE_URL = "https://slack.com/api/chat.postMessage"
 SLACK_HISTORY_URL = "https://slack.com/api/conversations.history"
+FILES_LIST_URL = "https://slack.com/api/files.list"
+FILE_INFO_URL = "https://slack.com/api/files.info"
 
 # Image upload functions
 def get_file_size(file_path):
@@ -133,6 +137,66 @@ def get_channel_messages(limit=100):
         print(f"HTTP Error: {response.status_code}")
         return None
 
+def get_file(file_id, output_dir="."):
+    headers = {
+        "Authorization": f"Bearer {SLACK_TOKEN}"
+    }
+    
+    # Get file info
+    params = {
+        "file": file_id
+    }
+    response = requests.get(FILE_INFO_URL, headers=headers, params=params)
+    
+    if response.status_code == 200:
+        file_info = response.json()
+        if file_info['ok']:
+            file_url = file_info['file']['url_private_download']
+            file_name = file_info['file']['name']
+            
+            # Download file
+            download_response = requests.get(file_url, headers=headers)
+            if download_response.status_code == 200:
+                output_path = Path(output_dir) / file_name
+                with open(output_path, 'wb') as f:
+                    f.write(download_response.content)
+                print(f"File downloaded successfully: {output_path}")
+            else:
+                print(f"Error downloading file: HTTP {download_response.status_code}")
+        else:
+            print(f"Error: {file_info['error']}")
+    else:
+        print(f"HTTP Error: {response.status_code}")
+
+def list_files(limit=10):
+    headers = {
+        "Authorization": f"Bearer {SLACK_TOKEN}"
+    }
+    
+    params = {
+        "channel": CHANNEL_ID,
+        "limit": limit
+    }
+    
+    response = requests.get(FILES_LIST_URL, headers=headers, params=params)
+    
+    if response.status_code == 200:
+        files_info = response.json()
+        if files_info['ok']:
+            return files_info['files']
+        else:
+            error_message = files_info.get('error', 'Unknown error')
+            if error_message == 'missing_scope':
+                print("Error: The Slack token doesn't have the necessary permissions.")
+                print("Please add the 'files:read' scope to your Slack app and update the token.")
+                print("Visit https://api.slack.com/apps to configure your app.")
+            else:
+                print(f"Error: {error_message}")
+            return None
+    else:
+        print(f"HTTP Error: {response.status_code}")
+        return None
+
 def main(args=None):
     if args is None:
         args = sys.argv[1:]
@@ -152,6 +216,15 @@ def main(args=None):
     history_parser = subparsers.add_parser("history", help="Get channel message history")
     history_parser.add_argument("--limit", type=int, default=100, help="Number of messages to retrieve (default: 100)")
 
+    # Get file command
+    get_parser = subparsers.add_parser("get", help="Get a file from Slack")
+    get_parser.add_argument("file_id", help="ID of the file to retrieve")
+    get_parser.add_argument("--output", default=".", help="Output directory (default: current directory)")
+
+    # List files command
+    list_files_parser = subparsers.add_parser("list-files", help="List recent files in the channel")
+    list_files_parser.add_argument("--limit", type=int, default=10, help="Number of files to list (default: 10)")
+
     args = parser.parse_args(args)
 
     if args.command == "upload":
@@ -165,6 +238,15 @@ def main(args=None):
                 print(f"User: {msg.get('user')}, Message: {msg.get('text')}, Timestamp: {msg.get('ts')}")
         else:
             print("Failed to retrieve messages.")
+    elif args.command == "get":
+        get_file(args.file_id, args.output)
+    elif args.command == "list-files":
+        files = list_files(args.limit)
+        if files:
+            for file in files:
+                print(f"ID: {file['id']}, Name: {file['name']}, Type: {file['filetype']}, Size: {file['size']} bytes, Created: {file['created']}")
+        else:
+            print("Failed to retrieve files.")
     else:
         parser.print_help()
 

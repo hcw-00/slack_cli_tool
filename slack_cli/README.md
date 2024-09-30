@@ -2,6 +2,14 @@
 
 This is a command-line interface (CLI) tool for interacting with Slack. It allows you to upload images, post messages, and retrieve channel history directly from your terminal.
 
+## Installation
+
+You can install this tool using pip:
+
+```
+pip install git+https://github.com/yourusername/slack-cli-tool.git
+```
+
 ## Setup
 
 1. Clone this repository or download the files (`slack.py`, `slack`, and `slack.bat`) to your local machine.
@@ -37,9 +45,6 @@ slack history --limit 50
 ## Platform Compatibility
 
 This tool is designed to work on both Unix-based systems (macOS, Linux) and Windows.
-
-- On Unix-based systems, use the `slack` command directly.
-- On Windows, you can use either `slack` or `slack.bat`.
 
 ## Note
 
