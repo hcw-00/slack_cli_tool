@@ -49,14 +49,15 @@ def get_upload_url(token, filename, file_size):
         print(f"HTTP Error: {response.status_code}")
         return None, None
 
-def upload_image_to_url(upload_url, file_path):
+# Rename the upload_image_to_url function to a more generic name
+def upload_file_to_url(upload_url, file_path):
     with open(file_path, "rb") as binary_data:
         files = {"file": binary_data}
         response = requests.post(upload_url, files=files)
         print("Upload response status:", response.status_code)
         print("Upload response text:", response.text)
         if response.status_code == 200:
-            print("Image uploaded successfully!")
+            print("File uploaded successfully!")
             return True
         else:
             print(f"HTTP Error: {response.status_code}")
@@ -82,12 +83,13 @@ def complete_upload(token, file_id):
     else:
         print(f"HTTP Error: {response.status_code}")
 
-def upload_image(image_file_path):
-    file_size = get_file_size(image_file_path)
-    upload_url, file_id = get_upload_url(SLACK_TOKEN, os.path.basename(image_file_path), file_size)
+# Update the upload_file function to handle both images and files
+def upload_file(file_path):
+    file_size = get_file_size(file_path)
+    upload_url, file_id = get_upload_url(SLACK_TOKEN, os.path.basename(file_path), file_size)
     
     if upload_url and file_id:
-        if upload_image_to_url(upload_url, image_file_path):
+        if upload_file_to_url(upload_url, file_path):  # Use the updated function
             complete_upload(SLACK_TOKEN, file_id)
 
 # Message posting function
@@ -204,9 +206,9 @@ def main(args=None):
     parser = argparse.ArgumentParser(description="Slack Chat CLI Tool")
     subparsers = parser.add_subparsers(dest="command", help="Available commands")
 
-    # Upload image command
-    upload_parser = subparsers.add_parser("upload", help="Upload an image to Slack")
-    upload_parser.add_argument("image_path", help="Path to the image file")
+    # Upload image or file command
+    upload_parser = subparsers.add_parser("upload", help="Upload an image or file to Slack")
+    upload_parser.add_argument("file_path", help="Path to the file or image")
 
     # Post message command
     post_parser = subparsers.add_parser("post", help="Post a message to Slack")
@@ -228,7 +230,7 @@ def main(args=None):
     args = parser.parse_args(args)
 
     if args.command == "upload":
-        upload_image(args.image_path)
+        upload_file(args.file_path)
     elif args.command == "post":
         post_message(args.message)
     elif args.command == "history":
