@@ -33,15 +33,19 @@ pip install git+https://github.com/yourusername/slack-cli-tool.git
 The tool supports three main commands: `upload`, `post`, and `history`.
 
 ### Upload an image
+```bash
 slack upload path/to/image.jpg
+```
 ### Post a message
+```bash
 slack post "Your message here"
+```
 ### Get channel history
 
 You can also specify the number of messages to retrieve:
-
+```bash
 slack history --limit 50
-
+```
 ## Platform Compatibility
 
 This tool is designed to work on both Unix-based systems (macOS, Linux) and Windows.
