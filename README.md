@@ -49,3 +49,32 @@ This tool is designed to work on both Unix-based systems (macOS, Linux) and Wind
 ## Note
 
 Make sure you have the necessary permissions in your Slack workspace to perform these actions.
+
+## Slack Event Handler
+
+A new file `slack_event_handler.py` has been added to handle Slack events and respond to messages.
+
+### Usage
+
+1. Ensure you have the necessary environment variable set for your bot token:
+   ```bash
+   SLACK_BOT_TOKEN=your_slack_bot_token_here
+   ```
+
+2. Start the Flask application:
+   ```bash
+   python slack_event_handler.py
+   ```
+
+3. The application listens for events from Slack at the `/slack/events` endpoint. It responds to messages containing "hello" with a friendly greeting.
+
+4. **Make sure your Slack app is configured to send events to your server's URL.** To receive events from Slack, your server must be publicly accessible. You can use services like ngrok(or cloudflare, etc...) to expose your local server to the internet.
+
+5. Make sure your Slack app is configured to send events to your server's URL.
+
+## Additional Notes
+
+- Ensure you have Flask and slack_sdk installed:
+   ```bash
+   pip install Flask slack-sdk
+   ```
